@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Наша Вселенная</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+:root {
+  --deep: #03040f;
+  --mid: #080d1e;
+  --rose: #e8a4b8;
+  --gold: #d4a853;
+  --lavender: #a89bce;
+  --white: #f0eef8;
+  --muted: rgba(240,238,248,0.45);
+}
+
+body {
+  background: var(--deep);
+  color: var(--white);
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  overflow-x: hidden;
+}
+
+/* ── CANVAS ── */
+#space { position:fixed; inset:0; z-index:0; }
+
+/* ── SCROLL CONTAINER ── */
+.page { position:relative; z-index:1; }
+
+/* ══ INTRO ══════════════════════════════════════ */
+.intro {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  position: relative;
+}
+
+.intro-orbit {
+  position: absolute;
+  width: 420px; height: 420px;
+  border: 1px solid rgba(232,164,184,0.15);
+  border-radius: 50%;
+  animation: spin 30s linear infinite;
+  top: 50%; left: 50%;
+  transform-origin: center;
+  margin-top: -210px;
+  margin-left: -210px;
+}
+.intro-orbit::before {
+  content: '✦';
+  position: absolute;
+  top: -8px; left: 50%;
+  transform: translateX(-50%);
+  color: var(--rose);
+  font-size: 14px;
+  filter: drop-shadow(0 0 8px var(--rose));
+}
+.intro-orbit-2 {
+  width: 580px; height: 580px;
+  margin-top: -290px; margin-left: -290px;
+  border-color: rgba(168,155,206,0.1);
+  animation-duration: 50s;
+  animation-direction: reverse;
+}
+.intro-orbit-2::before { content: '✧'; color: var(--lavender); filter: drop-shadow(0 0 8px var(--lavender)); }
+
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+.intro-eyebrow {
+  font-family: 'Jost', sans-serif;
+  font-weight: 200;
+  font-size: 0.7rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--rose);
+  margin-bottom: 2rem;
+  opacity: 0;
+  animation: fadeUp 1s 0.5s forwards;
+}
+
+.intro-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: clamp(3.5rem, 10vw, 8rem);
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.5rem;
+  opacity: 0;
+  animation: fadeUp 1s 0.8s forwards;
+}
+.intro-title em {
+  font-style: italic;
+  color: var(--rose);
+  text-shadow: 0 0 60px rgba(232,164,184,0.4);
+}
+
+.intro-sub {
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  margin-bottom: 3.5rem;
+  opacity: 0;
+  animation: fadeUp 1s 1.1s forwards;
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  animation: fadeIn 1s 2s forwards;
+}
+.scroll-hint span { font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); }
+.scroll-line {
+  width: 1px; height: 50px;
+  background: linear-gradient(var(--rose), transparent);
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse {
+  0%,100%{opacity:0.3;transform:scaleY(1)}
+  50%{opacity:1;transform:scaleY(0.6)}
+}
+
+/* ══ COUNTER ══════════════════════════════════════ */
+.counter-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 2rem;
+  text-align: center;
+}
+
+.section-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--rose);
+  margin-bottom: 3rem;
+  opacity: 0;
+}
+.section-label.visible { animation: fadeUp 0.8s forwards; }
+
+.counter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 4rem;
+  opacity: 0;
+}
+.counter-grid.visible { animation: fadeIn 1s 0.3s forwards; }
+
+.counter-cell {
+  padding: 2.5rem 2rem;
+  background: rgba(8,13,30,0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.4s;
+}
+.counter-cell:hover { background: rgba(232,164,184,0.05); }
+.counter-cell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(232,164,184,0.06), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.counter-cell:hover::after { opacity: 1; }
+
+.counter-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 300;
+  color: var(--white);
+  line-height: 1;
+}
+.counter-unit {
+  font-size: 0.65rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.counter-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-style: italic;
+  font-weight: 300;
+  color: var(--muted);
+  max-width: 500px;
+  line-height: 1.7;
+  opacity: 0;
+}
+.counter-quote.visible { animation: fadeUp 0.8s 0.5s forwards; }
+
+/* ══ MEMORIES ══════════════════════════════════════ */
+.memories-section {
+  padding: 8rem 6vw;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.memories-header {
+  margin-bottom: 5rem;
+  opacity: 0;
+}
+.memories-header.visible { animation: fadeUp 0.8s forwards; }
+
+.memories-header h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 300;
+  line-height: 1.1;
+}
+.memories-header h2 em { font-style: italic; color: var(--rose); }
+
+.memories-list { display: flex; flex-direction: column; gap: 1px; }
+
+.memory-item {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 2rem;
+  padding: 2.5rem 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  align-items: start;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.7s cubic-bezier(0.22,1,0.36,1);
+}
+.memory-item.visible { opacity: 1; transform: translateY(0); }
+
+.memory-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3rem;
+  font-weight: 300;
+  color: rgba(232,164,184,0.2);
+  line-height: 1;
+  text-align: right;
+}
+
+.memory-content {}
+.memory-emoji { font-size: 1.5rem; margin-bottom: 0.8rem; display: block; }
+.memory-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+}
+.memory-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.9; max-width: 500px; }
+
+/* ══ CONSTELLATION ══════════════════════════════════ */
+.constellation-section {
+  padding: 8rem 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.constellation-section h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 300;
+  margin-bottom: 1rem;
+  opacity: 0;
+}
+.constellation-section h2.visible { animation: fadeUp 0.8s forwards; }
+
+.constellation-sub {
+  font-size: 0.8rem;
+  color: var(--muted);
+  letter-spacing: 0.15em;
+  margin-bottom: 4rem;
+  opacity: 0;
+}
+.constellation-sub.visible { animation: fadeUp 0.8s 0.2s forwards; }
+
+#constellation-canvas {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  display: block;
+  cursor: crosshair;
+}
+
+/* ══ LETTER ══════════════════════════════════════ */
+.letter-section {
+  padding: 10rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.letter-wrap {
+  max-width: 620px;
+  width: 100%;
+  background: rgba(8,13,30,0.7);
+  border: 1px solid rgba(232,164,184,0.15);
+  padding: 4rem;
+  position: relative;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 1s ease;
+  backdrop-filter: blur(20px);
+}
+.letter-wrap.visible { opacity: 1; transform: translateY(0); }
+
+.letter-wrap::before {
+  content: '✦';
+  position: absolute;
+  top: -10px; left: 50%;
+  transform: translateX(-50%);
+  color: var(--rose);
+  font-size: 18px;
+  background: var(--deep);
+  padding: 0 0.5rem;
+  filter: drop-shadow(0 0 12px var(--rose));
+}
+
+.letter-date {
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--rose);
+  margin-bottom: 2rem;
+}
+
+.letter-body {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.15rem;
+  font-weight: 300;
+  line-height: 2;
+  color: rgba(240,238,248,0.85);
+}
+.letter-body p { margin-bottom: 1.2rem; }
+.letter-body em { font-style: italic; color: var(--white); }
+
+.letter-sign {
+  margin-top: 2.5rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-style: italic;
+  color: var(--rose);
+  text-align: right;
+}
+
+/* ══ FINALE ══════════════════════════════════════ */
+.finale {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  position: relative;
+}
+
+.finale-stars {
+  position: absolute;
+  font-size: 1.5rem;
+  animation: floatStar 4s ease-in-out infinite;
+}
+@keyframes floatStar {
+  0%,100%{transform:translateY(0) rotate(0deg);opacity:0.6}
+  50%{transform:translateY(-20px) rotate(10deg);opacity:1}
+}
+
+.finale-heart {
+  font-size: 5rem;
+  margin-bottom: 2rem;
+  animation: heartbeat 1.5s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(232,164,184,0.6));
+}
+@keyframes heartbeat {
+  0%,100%{transform:scale(1)}
+  14%{transform:scale(1.15)}
+  28%{transform:scale(1)}
+  42%{transform:scale(1.1)}
+  70%{transform:scale(1)}
+}
+
+.finale-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 7vw, 5.5rem);
+  font-weight: 300;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+}
+.finale-title em { font-style: italic; color: var(--rose); }
+
+.finale-sub {
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(25px) }
+  to   { opacity:1; transform:translateY(0) }
+}
+@keyframes fadeIn {
+  from { opacity:0 }
+  to   { opacity:1 }
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--deep); }
+::-webkit-scrollbar-thumb { background: var(--rose); border-radius: 2px; }
+
+@media (max-width: 700px) {
+  .counter-grid { grid-template-columns: repeat(2,1fr); }
+  .memory-item { grid-template-columns: 50px 1fr; gap: 1rem; }
+  .letter-wrap { padding: 2.5rem 1.8rem; }
+  .intro-orbit, .intro-orbit-2 { display: none; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="space"></canvas>
+
+<div class="page">
+
+  <!-- ══ INTRO ══ -->
+  <section class="intro">
+    <div class="intro-orbit"></div>
+    <div class="intro-orbit intro-orbit-2"></div>
+
+    <div class="intro-eyebrow">Годовщина · С любовью</div>
+    <h1 class="intro-title">
+      Ты моя<br><em>вселенная</em>
+    </h1>
+    <p class="intro-sub">и я бы заблудился без твоих звёзд</p>
+
+    <div class="scroll-hint">
+      <span>Листай</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ══ COUNTER ══ -->
+  <section class="counter-section">
+    <div class="section-label">// 4 месяца вместе</div>
+    <div class="counter-grid">
+      <div class="counter-cell">
+        <div class="counter-num" id="cnt-years">0</div>
+        <div class="counter-unit">лет</div>
+      </div>
+      <div class="counter-cell">
+        <div class="counter-num" id="cnt-months">0</div>
+        <div class="counter-unit">месяцев</div>
+      </div>
+      <div class="counter-cell">
+        <div class="counter-num" id="cnt-days">0</div>
+        <div class="counter-unit">дней</div>
+      </div>
+      <div class="counter-cell">
+        <div class="counter-num" id="cnt-hours">0</div>
+        <div class="counter-unit">часов</div>
+      </div>
+    </div>
+    <p class="counter-quote">
+      «Среди миллиарда звёзд во вселенной<br>
+      я выбрал бы тебя снова и снова»
+    </p>
+  </section>
+
+  <!-- ══ MEMORIES ══ -->
+  <section class="memories-section">
+    <div class="memories-header">
+      <div class="section-label" style="display:inline-block;margin-bottom:1rem">// Моменты</div>
+      <h2>Вещи которые<br>я <em>люблю</em> в тебе</h2>
+    </div>
+    <div class="memories-list">
+      <div class="memory-item">
+        <div class="memory-num">01</div>
+        <div class="memory-content">
+          <span class="memory-emoji">🌙</span>
+          <div class="memory-title">Твой смех</div>
+          <div class="memory-desc">Он звучит как маленькая музыка — внезапная и настоящая. Каждый раз как первый раз.</div>
+        </div>
+      </div>
+      <div class="memory-item">
+        <div class="memory-num">02</div>
+        <div class="memory-content">
+          <span class="memory-emoji">✨</span>
+          <div class="memory-title">Как ты смотришь на мир</div>
+          <div class="memory-desc">В твоих глазах обычные вещи становятся волшебными. Ты замечаешь то, что другие пропускают.</div>
+        </div>
+      </div>
+      <div class="memory-item">
+        <div class="memory-num">03</div>
+        <div class="memory-content">
+          <span class="memory-emoji">🌸</span>
+          <div class="memory-title">Твою заботу</div>
+          <div class="memory-desc">Тихую и настоящую. Без слов — просто присутствие, которое делает любой день лучше.</div>
+        </div>
+      </div>
+      <div class="memory-item">
+        <div class="memory-num">04</div>
+        <div class="memory-content">
+          <span class="memory-emoji">🌌</span>
+          <div class="memory-title">Твои мечты</div>
+          <div class="memory-desc">Большие и смелые. Я хочу быть рядом, пока каждая из них сбывается.</div>
+        </div>
+      </div>
+      <div class="memory-item">
+        <div class="memory-num">05</div>
+        <div class="memory-content">
+          <span class="memory-emoji">💫</span>
+          <div class="memory-title">Просто тебя</div>
+          <div class="memory-desc">Всю. Целиком. Со всеми твоими настроениями, мыслями и маленькими особенностями.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CONSTELLATION ══ -->
+  <section class="constellation-section">
+    <h2>Наше созвездие</h2>
+    <p class="constellation-sub">нажми на звёзды чтобы соединить их</p>
+    <canvas id="constellation-canvas" width="600" height="400"></canvas>
+  </section>
+
+  <!-- ══ LETTER ══ -->
+  <section class="letter-section">
+    <div class="letter-wrap">
+      <div class="letter-date">Сегодня · 4 месяца вместе</div>
+      <div class="letter-body">
+        <p>Я помню тот момент, когда понял, что влюбился. Это было не внезапно — <em>это было как рассвет</em>: тихо и неизбежно.</p>
+        <p>С тобой каждый день становится чем-то, что хочется запомнить. Даже самые обычные моменты — утренний кофе, случайные разговоры, тишина рядом — с тобой они превращаются во что-то драгоценное.</p>
+        <p>Я благодарен вселенной за то, что наши пути пересеклись именно так и именно тогда. Если бы всё было иначе — я бы пропустил <em>самое важное</em>.</p>
+        <p>Люблю тебя. Сегодня, завтра и все годовщины впереди.</p>
+      </div>
+      <div class="letter-sign">— всегда твой ✦</div>
+    </div>
+  </section>
+
+  <!-- ══ FINALE ══ -->
+  <section class="finale">
+    <div class="finale-stars" style="top:15%;left:10%;animation-delay:0s">✦</div>
+    <div class="finale-stars" style="top:25%;right:12%;animation-delay:0.7s">✧</div>
+    <div class="finale-stars" style="bottom:20%;left:18%;animation-delay:1.4s">⋆</div>
+    <div class="finale-stars" style="bottom:30%;right:8%;animation-delay:2.1s">✦</div>
+    <div class="finale-stars" style="top:60%;left:5%;animation-delay:0.3s">✧</div>
+
+    <div class="finale-heart">♡</div>
+    <h2 class="finale-title">
+      С 4 месяцами,<br><em>любимая</em>
+    </h2>
+    <p class="finale-sub">ты — моя любимая звезда</p>
+  </section>
+
+</div>
+
+<script>
+// ─── SPACE CANVAS ───────────────────────────────
+const space = document.getElementById('space');
+const sc = space.getContext('2d');
+space.width = window.innerWidth;
+space.height = window.innerHeight;
+
+const stars = Array.from({length: 280}, () => ({
+  x: Math.random() * space.width,
+  y: Math.random() * space.height,
+  r: Math.random() * 1.4 + 0.2,
+  alpha: Math.random(),
+  speed: Math.random() * 0.008 + 0.003,
+  phase: Math.random() * Math.PI * 2,
+  color: Math.random() > 0.85 ? '#e8a4b8' : Math.random() > 0.7 ? '#a89bce' : '#f0eef8'
+}));
+
+// Shooting stars
+const shooters = [];
+function spawnShooter() {
+  shooters.push({
+    x: Math.random() * space.width,
+    y: Math.random() * space.height * 0.5,
+    len: Math.random() * 120 + 60,
+    speed: Math.random() * 8 + 6,
+    alpha: 1,
+    angle: Math.PI / 4 + (Math.random() - 0.5) * 0.3
+  });
+}
+setInterval(spawnShooter, 3500);
+
+let frame = 0;
+function drawSpace() {
+  sc.clearRect(0, 0, space.width, space.height);
+
+  // nebula glow
+  const grad = sc.createRadialGradient(space.width*0.3, space.height*0.3, 0, space.width*0.3, space.height*0.3, 500);
+  grad.addColorStop(0, 'rgba(168,155,206,0.04)');
+  grad.addColorStop(1, 'transparent');
+  sc.fillStyle = grad;
+  sc.fillRect(0, 0, space.width, space.height);
+
+  const grad2 = sc.createRadialGradient(space.width*0.75, space.height*0.7, 0, space.width*0.75, space.height*0.7, 400);
+  grad2.addColorStop(0, 'rgba(232,164,184,0.05)');
+  grad2.addColorStop(1, 'transparent');
+  sc.fillStyle = grad2;
+  sc.fillRect(0, 0, space.width, space.height);
+
+  // stars
+  stars.forEach(s => {
+    s.alpha = 0.3 + 0.7 * (Math.sin(frame * s.speed + s.phase) * 0.5 + 0.5);
+    sc.beginPath();
+    sc.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    sc.fillStyle = s.color;
+    sc.globalAlpha = s.alpha;
+    sc.fill();
+  });
+
+  // shooting stars
+  sc.globalAlpha = 1;
+  for(let i = shooters.length-1; i >= 0; i--) {
+    const s = shooters[i];
+    const grd = sc.createLinearGradient(
+      s.x, s.y,
+      s.x - Math.cos(s.angle)*s.len,
+      s.y - Math.sin(s.angle)*s.len
+    );
+    grd.addColorStop(0, `rgba(232,164,184,${s.alpha})`);
+    grd.addColorStop(1, 'transparent');
+    sc.beginPath();
+    sc.moveTo(s.x, s.y);
+    sc.lineTo(s.x - Math.cos(s.angle)*s.len, s.y - Math.sin(s.angle)*s.len);
+    sc.strokeStyle = grd;
+    sc.lineWidth = 1.5;
+    sc.stroke();
+    s.x += Math.cos(s.angle) * s.speed;
+    s.y += Math.sin(s.angle) * s.speed;
+    s.alpha -= 0.015;
+    if(s.alpha <= 0) shooters.splice(i, 1);
+  }
+
+  frame++;
+  requestAnimationFrame(drawSpace);
+}
+drawSpace();
+
+window.addEventListener('resize', () => {
+  space.width = window.innerWidth;
+  space.height = window.innerHeight;
+});
+
+// ─── TIMER ──────────────────────────────────────
+// Change this date to your actual anniversary date!
+const startDate = new Date('2026-01-10T00:00:00');
+
+function updateTimer() {
+  const now = new Date();
+  const diff = now - startDate;
+  const totalDays = Math.floor(diff / (1000*60*60*24));
+  const years = Math.floor(totalDays / 365);
+  const months = Math.floor((totalDays % 365) / 30);
+  const days = totalDays % 30;
+  const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+
+  animateNum('cnt-years', years);
+  animateNum('cnt-months', months);
+  animateNum('cnt-days', days);
+  animateNum('cnt-hours', hours);
+}
+
+function animateNum(id, target) {
+  const el = document.getElementById(id);
+  const current = parseInt(el.textContent) || 0;
+  if(current === target) return;
+  const step = (target - current) / 20;
+  let val = current;
+  const t = setInterval(() => {
+    val += step;
+    if(Math.abs(val - target) < 1) { el.textContent = target; clearInterval(t); }
+    else el.textContent = Math.round(val);
+  }, 40);
+}
+
+setTimeout(updateTimer, 1500);
+
+// ─── CONSTELLATION CANVAS ────────────────────────
+const cc = document.getElementById('constellation-canvas');
+const cx = cc.getContext('2d');
+const W = cc.width, H = cc.height;
+
+// Fixed star positions forming a heart-like constellation
+const cstars = [
+  {x:300,y:80},{x:200,y:120},{x:400,y:120},{x:150,y:180},
+  {x:450,y:175},{x:100,y:240},{x:500,y:235},{x:160,y:300},
+  {x:440,y:295},{x:240,y:340},{x:360,y:338},{x:300,y:380},
+  {x:80,y:320},{x:520,y:310},{x:300,y:200},{x:220,y:220},
+  {x:380,y:215},{x:140,y:140},{x:460,y:135}
+];
+
+const connections = [];
+let hovered = -1;
+
+function drawConstellation() {
+  cx.clearRect(0,0,W,H);
+
+  // Draw connection lines
+  connections.forEach(([a,b]) => {
+    const s1 = cstars[a], s2 = cstars[b];
+    const grd = cx.createLinearGradient(s1.x,s1.y,s2.x,s2.y);
+    grd.addColorStop(0,'rgba(232,164,184,0.6)');
+    grd.addColorStop(1,'rgba(168,155,206,0.6)');
+    cx.beginPath();
+    cx.moveTo(s1.x,s1.y);
+    cx.lineTo(s2.x,s2.y);
+    cx.strokeStyle = grd;
+    cx.lineWidth = 1;
+    cx.stroke();
+  });
+
+  // Draw stars
+  cstars.forEach((s,i) => {
+    const isHov = i === hovered;
+    const r = isHov ? 6 : 3.5;
+
+    // glow
+    const g = cx.createRadialGradient(s.x,s.y,0,s.x,s.y,isHov?20:12);
+    g.addColorStop(0, isHov ? 'rgba(232,164,184,0.5)' : 'rgba(232,164,184,0.25)');
+    g.addColorStop(1,'transparent');
+    cx.beginPath();
+    cx.arc(s.x,s.y,isHov?20:12,0,Math.PI*2);
+    cx.fillStyle = g;
+    cx.fill();
+
+    cx.beginPath();
+    cx.arc(s.x,s.y,r,0,Math.PI*2);
+    cx.fillStyle = isHov ? '#e8a4b8' : '#f0eef8';
+    cx.fill();
+  });
+}
+
+let lastClicked = -1;
+cc.addEventListener('click', e => {
+  const rect = cc.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (W/rect.width);
+  const my = (e.clientY - rect.top) * (H/rect.height);
+
+  let closest = -1, minD = 30;
+  cstars.forEach((s,i) => {
+    const d = Math.hypot(s.x-mx, s.y-my);
+    if(d < minD) { minD = d; closest = i; }
+  });
+
+  if(closest === -1) return;
+  if(lastClicked !== -1 && lastClicked !== closest) {
+    const key = [Math.min(lastClicked,closest), Math.max(lastClicked,closest)];
+    const exists = connections.some(c => c[0]===key[0] && c[1]===key[1]);
+    if(!exists) connections.push(key);
+    lastClicked = -1;
+  } else {
+    lastClicked = closest;
+  }
+  drawConstellation();
+});
+
+cc.addEventListener('mousemove', e => {
+  const rect = cc.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (W/rect.width);
+  const my = (e.clientY - rect.top) * (H/rect.height);
+  let closest = -1, minD = 25;
+  cstars.forEach((s,i) => {
+    const d = Math.hypot(s.x-mx, s.y-my);
+    if(d < minD) { minD=d; closest=i; }
+  });
+  if(closest !== hovered) { hovered = closest; drawConstellation(); }
+});
+
+// Animate constellation draw on load
+let animIdx = 0;
+function animateCstars() {
+  drawConstellation();
+  if(animIdx < cstars.length) {
+    animIdx++;
+    setTimeout(animateCstars, 80);
+  }
+}
+animateCstars();
+
+// ─── SCROLL OBSERVER ────────────────────────────
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.15 });
+
+document.querySelectorAll(
+  '.section-label, .counter-grid, .counter-quote, .memories-header, ' +
+  '.memory-item, .constellation-section h2, .constellation-sub, .letter-wrap'
+).forEach(el => obs.observe(el));
+
+// Stagger memory items
+document.querySelectorAll('.memory-item').forEach((el, i) => {
+  el.style.transitionDelay = (i * 0.12) + 's';
+});
+</script>
+</body>
+</html>
